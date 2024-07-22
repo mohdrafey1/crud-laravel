@@ -64,7 +64,11 @@
                                             @csrf
                                             @method('delete')
                                         </form>
-                                    </td>
+                                        @if($product->moreInfo)
+                                        <a href="{{ route('more_infos.edit', $product->moreInfo->id) }}" class="btn btn-warning btn-sm">More Info</a>
+                                        @else
+                                        <a href="{{ route('more_infos.create', ['product' => $product->id]) }}" class="btn btn-success btn-sm">Add More Info</a>
+                                        @endif
                                 </tr>
                                 @endforeach
                                 @else
