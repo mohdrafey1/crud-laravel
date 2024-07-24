@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+
     //product page
     public function index()
     {
