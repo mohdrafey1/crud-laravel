@@ -9,6 +9,15 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected $table = 'products';
+
+    protected $fillable = [
+        'name',
+        'sku',
+        'price',
+        'description'
+    ];
+
     public function moreInfo()
     {
         return $this->hasOne(MoreInfo::class);

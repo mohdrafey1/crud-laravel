@@ -25,6 +25,8 @@
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
                             @if (Auth::check())
                             <div>{{ Auth::user()->name }}</div>
+                            @else
+                            <div>Guest</div>
                             @endif
 
                             <div class="ms-1">
@@ -36,6 +38,7 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        @if (Auth::check())
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
@@ -49,6 +52,11 @@
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
                         </form>
+                        @else
+                        <x-dropdown-link :href="route('login')">
+                            {{ __('Login') }}
+                        </x-dropdown-link>
+                        @endif
                     </x-slot>
                 </x-dropdown>
             </div>
@@ -76,11 +84,17 @@
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
+                @if (Auth::check())
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                @else
+                <div class="font-medium text-base text-gray-800">Guest</div>
+                <div class="font-medium text-sm text-gray-500">Not logged in</div>
+                @endif
             </div>
 
             <div class="mt-3 space-y-1">
+                @if (Auth::check())
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
@@ -94,6 +108,11 @@
                         {{ __('Log Out') }}
                     </x-responsive-nav-link>
                 </form>
+                @else
+                <x-responsive-nav-link :href="route('login')">
+                    {{ __('Login') }}
+                </x-responsive-nav-link>
+                @endif
             </div>
         </div>
     </div>
