@@ -6,17 +6,47 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
 {
-
-    //product page
-    public function index()
+    // Product page
+    public function index(Request $request)
     {
-        $products = Product::orderBy('created_at', 'DESC')->get();
-        return view('products.list', [
-            'products' => $products
-        ]);
+        if ($request->ajax()) {
+            $data = Product::select('*');
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $editButton = '';
+                    $deleteButton = '';
+                    $moreInfoButton = '';
+
+                    if (Auth::user()->can('edit products')) {
+                        $editButton = '<a href="' . route('products.edit', $row->id) . '" class="edit btn btn-warning btn-sm">Edit</a>';
+                    }
+
+                    if (Auth::user()->can('delete products')) {
+                        $deleteButton = '<a href="#" data-product-id="' . $row->id . '" class="delete btn btn-danger btn-sm">Delete</a>';
+                        $deleteButton .= '<form id="delete-product-form-' . $row->id . '" action="' . route('products.destroy', $row->id) . '" method="post" style="display: none;">' . csrf_field() . method_field('delete') . '</form>';
+                    }
+
+                    if (Auth::user()->can('view products')) {
+                        if ($row->moreInfo) {
+                            $moreInfoButton = '<a href="' . route('more_infos.edit', $row->moreInfo->id) . '" class="edit btn btn-warning btn-sm">More Info</a>';
+                        } else {
+                            $moreInfoButton = '<a href="' . route('more_infos.create', ['product' => $row->id]) . '" class="edit btn btn-success btn-sm">Add More Info</a>';
+                        }
+                    }
+
+                    return $editButton . ' ' . $deleteButton . ' ' . $moreInfoButton;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('products.list');
     }
 
     //create

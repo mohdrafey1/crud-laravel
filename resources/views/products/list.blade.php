@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Crud Laravel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
 </head>
 
 <body class="bg-light">
@@ -32,7 +33,7 @@
                             <h3 class="mb-0 fs-2">Products</h3>
                         </div>
                         <div class="card-body">
-                            <table class="table table-striped table-bordered">
+                            <table class="table table-striped table-bordered" id="product-table">
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
@@ -44,49 +45,6 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @if ($products->isNotEmpty())
-                                    @foreach ($products as $product)
-                                    <tr>
-                                        <td>{{ $product->id }}</td>
-                                        <td>
-                                            @if ($product->image)
-                                            <img style="width: 60px; height: 60px; object-fit: cover;" src="{{ asset('uploads/products/' . $product->image) }}" alt="Product Image" class="img-fluid">
-                                            @else
-                                            No Image
-                                            @endif
-                                        </td>
-                                        <td>{{ $product->name }}</td>
-                                        <td>{{ $product->sku }}</td>
-                                        <td>${{ number_format($product->price, 2) }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($product->created_at)->format('d M, Y') }}</td>
-                                        <td>
-                                            @can('edit products')
-                                            <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm">Edit</a>
-                                            @endcan
-                                            @can('delete products')
-                                            <a href="#" data-product-id="{{ $product->id }}" class="btn btn-danger btn-sm delete-button">Delete</a>
-                                            <form id="delete-product-form-{{ $product->id }}" action="{{ route('products.destroy', $product->id) }}" method="post" style="display: none;">
-                                                @csrf
-                                                @method('delete')
-                                            </form>
-                                            @endcan
-                                            @can('view products')
-                                            @if($product->moreInfo)
-                                            <a href="{{ route('more_infos.edit', $product->moreInfo->id) }}" class="btn btn-warning btn-sm">More Info</a>
-                                            @else
-                                            <a href="{{ route('more_infos.create', ['product' => $product->id]) }}" class="btn btn-success btn-sm">Add More Info</a>
-                                            @endif
-                                            @endcan
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                    @else
-                                    <tr>
-                                        <td colspan="7" class="text-center">No Products Found</td>
-                                    </tr>
-                                    @endif
-                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -95,25 +53,65 @@
         </div>
     </x-app-layout>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteButtons = document.querySelectorAll('.delete-button');
+        $(document).ready(function() {
+            $('#product-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('products.index') }}",
+                columns: [{
+                        data: 'id',
+                        name: 'id'
+                    },
+                    {
+                        data: 'image',
+                        name: 'image',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, full, meta) {
+                            return data ? `<img src="{{ url('uploads/products') }}/${data}" alt="Product Image" style="width: 60px; height: 60px; object-fit: cover;">` : 'No Image';
+                        }
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'sku',
+                        name: 'sku'
+                    },
+                    {
+                        data: 'price',
+                        name: 'price'
+                    },
+                    {
+                        data: 'created_at',
+                        name: 'created_at',
+                        render: function(data, type, full, meta) {
+                            return moment(data).format('DD-MM-YY');
+                        }
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
+            });
 
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const productId = this.getAttribute('data-product-id');
-                    deleteProduct(productId);
-                });
+            $(document).on('click', '.delete-button', function(event) {
+                event.preventDefault();
+                const productId = $(this).data('product-id');
+                if (confirm("Are you sure you want to delete this product?")) {
+                    $('#delete-product-form-' + productId).submit();
+                }
             });
         });
-
-        function deleteProduct(id) {
-            if (confirm("Are you sure you want to delete this product?")) {
-                document.getElementById("delete-product-form-" + id).submit();
-            }
-        }
     </script>
 </body>
 
